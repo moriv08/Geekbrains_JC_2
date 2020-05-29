@@ -46,7 +46,6 @@ public class Main_5 {
 
             for (int i = 0; i < a1.length; i++)
                 a1[i] = 1;
-
             for (int i = 0; i < a1.length; i++)
                 a1[i] = (float)(arr[i] * Math.sin(0.2f + i / 5) * Math.cos(0.2f + i / 5) * Math.cos(0.4f + i / 2));
 
@@ -56,7 +55,6 @@ public class Main_5 {
 
             for (int i = 0; i < a2.length; i++)
                 a2[i] = 1;
-
             for (int i = 0; i < a2.length; i++)
                 a2[i] = (float)(arr[i] * Math.sin(0.2f + i / 5) * Math.cos(0.2f + i / 5) * Math.cos(0.4f + i / 2));
 
