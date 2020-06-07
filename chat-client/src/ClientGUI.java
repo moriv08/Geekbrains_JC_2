@@ -1,3 +1,4 @@
+import ru.gb.chat.library.Library;
 import ru.gb.jwo.network.SocketThread;
 import ru.gb.jwo.network.SocketThreadListener;
 
@@ -13,16 +14,17 @@ import static java.lang.String.copyValueOf;
 
 public class ClientGUI extends JFrame implements ActionListener, Thread.UncaughtExceptionHandler, SocketThreadListener {
 
-    private static final int WIDTH = 400;
+    private static final int WIDTH = 600;
     private static final int HEIGHT = 300;
 
     private final JTextArea log = new JTextArea();
     private final JPanel panelTop = new JPanel(new GridLayout(2, 3));
-    private final JTextField tfIPAdress = new JTextField("127.0.0.1");
+//    private final JTextField tfIPAdress = new JTextField("127.0.0.1");
+    private final JTextField tfIPAdress = new JTextField("89.178.229.65");
     private final JTextField tfPort = new JTextField("8189");
     private final JCheckBox cbAlwaysOnTop = new JCheckBox("Always on top");
     private final JTextField tfLogin = new JTextField("Max");
-    private final JPasswordField tfPassword = new JPasswordField("Password");
+    private final JPasswordField tfPassword = new JPasswordField("123");
     private final JButton btnLogin = new JButton("Login");
 
     private final JPanel panelBottom = new JPanel(new BorderLayout());
@@ -35,27 +37,25 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
 
     SocketThread socketThread;
 
-    private final JScrollPane scrollLog = new JScrollPane(log);
-    private final JScrollPane scrollUser = new JScrollPane(userList);
-
-    private String[] users = {"user1", "user2", "user1", "user2",
-                                "user_with_an_exceptionally_long_name_in_this_chat"};
-
-
-
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater( () -> new ClientGUI() );
     }
 
     public ClientGUI(){
-        super("Chat Window");
         Thread.setDefaultUncaughtExceptionHandler(this);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(WIDTH, HEIGHT);
         setLocationRelativeTo(null);
+        setSize(WIDTH, HEIGHT);
 
         log.setEditable(false);
+
+        JScrollPane scrollLog = new JScrollPane(log);
+        JScrollPane scrollUser = new JScrollPane(userList);
+        String[] users = {"user1", "user2", "user1", "user2",
+                "user_with_an_exceptionally_long_name_in_this_chat"};
+        scrollUser.setPreferredSize(new Dimension(100, 0));
+
+        userList.setListData(users);
 
         cbAlwaysOnTop.addActionListener(this);
         btnSend.addActionListener(this);
@@ -63,18 +63,7 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         btnLogin.addActionListener(this);
         btnDisconnect.addActionListener(this);
 
-        userList.setListData(users);
-        scrollUser.setPreferredSize(new Dimension(100, 0));
-
-        panelTop.setBackground(Color.GRAY);
-
-//        panelTop.setVisible(true);
-//        panelBottom.setVisible(false);
-        changePanels(true, false);
-
-        panelBottom.setBackground(Color.LIGHT_GRAY);
-
-        panelTop.add(tfIPAdress, tfPort);
+        panelTop.add(tfIPAdress);
         panelTop.add(tfPort);
         panelTop.add(cbAlwaysOnTop);
         panelTop.add(tfLogin);
@@ -85,6 +74,8 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         panelBottom.add(tfMessage, BorderLayout.CENTER);
         panelBottom.add(btnSend, BorderLayout.EAST);
 
+        changePanels(true, false);
+
         add(scrollLog, BorderLayout.CENTER);
         add(scrollUser, BorderLayout.EAST);
         add(panelTop, BorderLayout.NORTH);
@@ -94,19 +85,13 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     }
 
     @Override
-    public void uncaughtException(Thread t, Throwable e) {
-        e.printStackTrace();
-        showExeption(t, e);
-        System.exit(1);
-    }
-
-    @Override
     public void actionPerformed(ActionEvent e) {
         Object src = e.getSource();
         if (src == cbAlwaysOnTop){
             setAlwaysOnTop(cbAlwaysOnTop.isSelected());
-        }else if (src == btnSend || src == tfMessage)
-            sendMsg(tfMessage.getText());
+        } else if (src == btnSend || src == tfMessage)
+//            sendMsg(tfMessage.getText());
+            sendMsg();
         else if (src == btnLogin)
             connetc();
         else if (src == btnDisconnect)
@@ -125,46 +110,54 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     }
 
     private void disconnect() {
-        socketThread.interrupt();
-        changePanels(true, false);
+        socketThread.close();
     }
 
-    public void sendMsg(String msg){
+    private void changePanels(boolean top, boolean bottom){
+        panelTop.setVisible(top);
+        panelBottom.setVisible(bottom);
+    }
 
+    private void sendMsg(){
+        String msg = tfMessage.getText();
+        if ("".equals(msg)) return;
+        tfMessage.setText(null);
         tfMessage.grabFocus();
-
-        if ("".equals(msg))
-            return;
-        else if (msg.length() > 700){
-            JOptionPane.showMessageDialog(this, "Максимально 700 символов");
-            return;
-        }
-
-        if (msg.length() < 33)
-            socketThread.sendMsg(msg);
-        else{
-            char[] txt = new char[700];
-            if (msg.length() > 33){
-                int wrap = 0;
-                for (int i = 0; i < msg.length(); i++)
-                        if (i % 33 == 0 && i != 0){
-                            txt[i] = '\n';
-                            wrap++;
-                        }
-                        else
-                            txt[i] = msg.charAt(i - wrap);
-                socketThread.sendMsg(copyValueOf(txt));
-            }
-        }
-        logFile(msg, tfLogin.getText());
-        tfMessage.setText("");
+        socketThread.sendMsg(msg);
     }
 
-    private void logFile(String msg, String username){
+//    privat void sendMsg(String msg){
+//        tfMessage.grabFocus();
+//        if ("".equals(msg))
+//            return;
+//        else if (msg.length() > 700){
+//            JOptionPane.showMessageDialog(this, "Максимально 700 символов");
+//            return;
+//        }
+//        if (msg.length() < 33)
+//            socketThread.sendMsg(msg);
+//        else{
+//            char[] txt = new char[700];
+//            if (msg.length() > 33){
+//                int wrap = 0;
+//                for (int i = 0; i < msg.length(); i++)
+//                    if (i % 33 == 0 && i != 0){
+//                        txt[i] = '\n';
+//                        wrap++;
+//                    }
+//                    else
+//                        txt[i] = msg.charAt(i - wrap);
+//                socketThread.sendMsg(copyValueOf(txt));
+//            }
+//        }
+//        logFile(msg, tfLogin.getText());
+//        tfMessage.setText(null);
+//    }
 
-        try (FileWriter file = new FileWriter("log.txt", true)){
-            file.write(username + ": " + msg + "\n");
-            file.flush();
+    private void wrtMsgToLogFile(String msg, String username){
+        try (FileWriter out = new FileWriter("log.txt", true)){
+            out.write(username + ": " + msg + "\n");
+            out.flush();
         }catch (IOException e){
             if (!shownIoErrors){
                 shownIoErrors = true;
@@ -193,9 +186,11 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         JOptionPane.showMessageDialog(null, msg, "Exeption", JOptionPane.ERROR_MESSAGE);
     }
 
-    private void changePanels(boolean top, boolean bottom){
-        panelTop.setVisible(top);
-        panelBottom.setVisible(bottom);
+    @Override
+    public void uncaughtException(Thread t, Throwable e) {
+        e.printStackTrace();
+        showExeption(t, e);
+        System.exit(1);
     }
 
     /*
@@ -204,24 +199,22 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
 
     @Override
     public void onSocketStart(SocketThread thread, Socket socket) {
-
         putLog("Start");
-
     }
 
     @Override
     public void onSocketStop(SocketThread thread) {
         putLog("Stop");
-
+        changePanels(true, false);
     }
 
     @Override
     public void onSocketReady(SocketThread thread, Socket socket) {
         putLog("Ready");
-
-//        this.panelTop.setVisible(false);
-//        panelBottom.setVisible(true);
         changePanels(false, true);
+        String login = tfLogin.getText();
+        String password = new String(tfPassword.getPassword());
+        thread.sendMsg(Library.getAuthRequest(login, password));
     }
 
     @Override
@@ -232,5 +225,6 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     @Override
     public void onSocketExeption(SocketThread thread, Throwable throwable) {
         showExeption(thread, throwable);
+        thread.close();
     }
 }

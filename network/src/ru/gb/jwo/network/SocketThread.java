@@ -21,7 +21,6 @@ public class SocketThread extends Thread{
 
     @Override
     public void run() {
-        super.run();
         try {
             listener.onSocketStart(this, socket);
             in = new DataInputStream(socket.getInputStream());
@@ -54,13 +53,13 @@ public class SocketThread extends Thread{
         try {
             in.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            listener.onSocketExeption(this, e);
         }
         interrupt();
         try {
             socket.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            listener.onSocketExeption(this, e);
         }
         listener.onSocketStop(this);
     }
